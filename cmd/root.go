@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
+	"time"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -16,11 +17,15 @@ func RootCmd() *cobra.Command {
 		Use:   "ts",
 		Short: "timestamp convert & compare tool",
 		Example: `
-	(timestamp)	$: ts 
-	(format)	$: ts -f "2019/06/25 23:30:10"
-	(before)	$: ts -b "2019/06/25 23:30:10" ; echo $?
-	(after)		$: ts -a "2019/06/25 23:30:10" ; echo $?
-	(timezone)	$: ts -f "2019/06/25 23:30:10" -z "Asia/Shanghai"	
+	(now timestamp)	$: ts
+	(now add)		$: ts --add 1d
+	(now sub)		$: ts --sub 1d
+	(convert)		$: ts "2019/06/24 23:30:10"
+	(pipe)			$: echo "2019/06/24 23:30:10" | ts		
+	(format)		$: ts -f "2019/06/25 23:30:10"
+	(before)		$: ts -b "2019/06/25 23:30:10" ; echo $?
+	(after)			$: ts -a "2019/06/25 23:30:10" ; echo $?
+	(timezone)		$: ts -f "2019/06/25 23:30:10" -z "Asia/Shanghai"	
 	`,
 		Run: func(cmd *cobra.Command, args []string) {
 			//pipe stdin
@@ -37,10 +42,13 @@ func RootCmd() *cobra.Command {
 			exitForErr(Main(cmd, args))
 		},
 	}
+
 	cmd.Flags().StringP("after", "a", "", "after compare")
 	cmd.Flags().StringP("before", "b", "", "before compare")
 	cmd.Flags().StringP("format", "f", "", "time format")
 	cmd.Flags().StringP("timezone", "z", "", "time zone")
+	cmd.Flags().DurationP("add", "", 0*time.Second, "add duration")
+	cmd.Flags().DurationP("sub", "", 0*time.Second, "sub duration")
 	return cmd
 }
 

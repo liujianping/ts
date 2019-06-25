@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/araddon/dateparse"
@@ -35,11 +36,16 @@ func Main(cmd *cobra.Command, args []string) error {
 	//times
 	times := make([]time.Time, 0, len(args)+1)
 	if len(args) == 0 {
-		times = append(times, time.Now())
+		t := time.Now()
+		t = t.Add(viper.GetDuration("add"))
+		t = t.Add(-viper.GetDuration("sub"))
+		times = append(times, t)
 	}
 	for _, arg := range args {
-		t, err := dateparse.ParseStrict(arg)
+		t, err := dateparse.ParseStrict(strings.TrimSpace(arg))
 		exitForErr(err)
+		t = t.Add(viper.GetDuration("add"))
+		t = t.Add(-viper.GetDuration("sub"))
 		times = append(times, t)
 	}
 
@@ -81,8 +87,8 @@ func Main(cmd *cobra.Command, args []string) error {
 		// StampMilli = "Jan _2 15:04:05.000"
 		// StampMicro = "Jan _2 15:04:05.000000"
 		// StampNano  = "Jan _2 15:04:05.000000000"
-		dest := fmt.Sprint(time.Now().UnixNano() / 1000000)
 		if len(viper.GetString("format")) > 0 {
+			dest := ""
 			switch viper.GetString("format") {
 			case "ANSIC":
 				dest = time.ANSIC
@@ -119,8 +125,10 @@ func Main(cmd *cobra.Command, args []string) error {
 				exitForErr(err)
 				dest = d
 			}
+			fmt.Fprintln(stdout, tm.Format(dest))
+			continue
 		}
-		fmt.Fprintln(stdout, tm.Format(dest))
+		fmt.Fprintln(stdout, tm.UnixNano()/1000000)
 	}
 	return nil
 }
