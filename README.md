@@ -23,18 +23,24 @@ Usage:
 
 Examples:
 
-	(timestamp)	$: ts
-	(format)	$: ts -f "2019/06/25 23:30:10"
-	(before)	$: ts -b "2019/06/25 23:30:10" ; echo $?
-	(after)		$: ts -a "2019/06/25 23:30:10" ; echo $?
-	(timezone)	$: ts -f "2019/06/25 23:30:10" -z "Asia/Shanghai"
+	(now timestamp)	$: ts
+	(now add)		$: ts --add 1d
+	(now sub)		$: ts --sub 1d
+	(convert)		$: ts "2019/06/24 23:30:10"
+	(pipe)			$: echo "2019/06/24 23:30:10" | ts
+	(format)		$: ts -f "2019/06/25 23:30:10"
+	(before)		$: ts -b "2019/06/25 23:30:10" ; echo $?
+	(after)			$: ts -a "2019/06/25 23:30:10" ; echo $?
+	(timezone)		$: ts -f "2019/06/25 23:30:10" -z "Asia/Shanghai"
 
 
 Flags:
+      --add duration      add duration
   -a, --after string      after compare
   -b, --before string     before compare
   -f, --format string     time format
   -h, --help              help for ts
+      --sub duration      sub duration
   -z, --timezone string   time zone
 ````
 
