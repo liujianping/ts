@@ -1,10 +1,15 @@
 ts
 ===
+timestamp convert & compare tool
 
 ## Install
 
 ````bash
-$: brew install ts
+$: brew tap liujianping/tap && brew install ts
+
+//OR
+
+$: go get github.com/liujianping/ts
 ````
 
 ## Quick Start
