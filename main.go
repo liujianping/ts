@@ -14,8 +14,18 @@
 
 package main
 
-import "github.com/liujianping/ts/cmd"
+import (
+	"github.com/liujianping/ts/cmd"
+	ver "github.com/liujianping/ts/version"
+)
+
+var (
+	version = "dev"
+	commit  = "none"
+	date    = "unknown"
+)
 
 func main() {
+	ver.Info(version, commit, date)
 	cmd.Execute()
 }

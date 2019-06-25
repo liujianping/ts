@@ -6,6 +6,7 @@ import (
 	"os"
 	"time"
 
+	"github.com/liujianping/ts/version"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
@@ -28,6 +29,10 @@ func RootCmd() *cobra.Command {
 	(timezone)		$: ts -f "2019/06/25 23:30:10" -z "Asia/Shanghai"	
 	`,
 		Run: func(cmd *cobra.Command, args []string) {
+			if viper.GetBool("version") {
+				fmt.Println(version.String())
+				os.Exit(0)
+			}
 			//pipe stdin
 			if len(args) == 0 {
 				info, err := os.Stdin.Stat()
@@ -42,7 +47,7 @@ func RootCmd() *cobra.Command {
 			exitForErr(Main(cmd, args))
 		},
 	}
-
+	cmd.Flags().BoolP("version", "v", false, "current version")
 	cmd.Flags().StringP("after", "a", "", "after compare")
 	cmd.Flags().StringP("before", "b", "", "before compare")
 	cmd.Flags().StringP("format", "f", "", "time format")
