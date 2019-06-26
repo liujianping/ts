@@ -15,6 +15,13 @@ func TestVersion(t *testing.T) {
 	assert.Nil(t, Main(cmd, []string{}))
 }
 
+func TestFormats(t *testing.T) {
+	cmd := RootCmd()
+	viper.BindPFlags(cmd.Flags())
+	cmd.Flags().Set("Formats", "true")
+	assert.Nil(t, Main(cmd, []string{}))
+}
+
 func TestArgs(t *testing.T) {
 	cmd := RootCmd()
 	viper.BindPFlags(cmd.Flags())
@@ -45,11 +52,13 @@ func TestBefore(t *testing.T) {
 	viper.BindPFlags(cmd.Flags())
 	cmd.Flags().Set("before", "2039adfasdf")
 	assert.NotNil(t, Main(cmd, []string{"2019/06/12"}))
-	cmd.Flags().Set("before", "2039/12/12")
+	cmd.Flags().Set("before", "2029/12/12")
 	e1 := Main(cmd, []string{"2019/06/12"})
 	assert.NotNil(t, e1)
 	assert.Equal(t, int32(1), errors.ValueFrom(e1), e1.Error())
-	assert.Nil(t, Main(cmd, []string{"2040/06/12"}))
+	e2 := Main(cmd, []string{"2039/06/12"})
+	assert.NotNil(t, e2)
+	assert.Equal(t, int32(0), errors.ValueFrom(e2), e2.Error())
 }
 
 func TestAfter(t *testing.T) {
@@ -58,10 +67,12 @@ func TestAfter(t *testing.T) {
 	cmd.Flags().Set("after", "2009fasdfa")
 	assert.NotNil(t, Main(cmd, []string{"2019/06/12"}))
 	cmd.Flags().Set("after", "2009/01/01")
+	e1 := Main(cmd, []string{"2008/06/12"})
+	assert.NotNil(t, e1)
+	assert.Equal(t, int32(0), errors.ValueFrom(e1), e1.Error())
 	e2 := Main(cmd, []string{"2019/06/12"})
 	assert.NotNil(t, e2)
 	assert.Equal(t, int32(1), errors.ValueFrom(e2), e2.Error())
-	assert.Nil(t, Main(cmd, []string{"2008/06/12"}))
 }
 
 func TestFormat(t *testing.T) {

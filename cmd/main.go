@@ -14,17 +14,64 @@ import (
 	"github.com/x-mod/errors"
 )
 
+type cmpCode struct {
+	val int32
+}
+
+func (cc *cmpCode) Value() int32 {
+	if cc.val != 0 {
+		return 1
+	}
+	return cc.val
+}
+
+func (cc *cmpCode) String() string {
+	if cc.val == 1 {
+		return "True"
+	}
+	return "False"
+}
+
 func exitForErr(err error) {
 	if err != nil {
-		os.Stderr.Write([]byte(err.Error()))
+		os.Stdout.Write([]byte(err.Error() + "\n"))
 		os.Exit(int(errors.ValueFrom(err)))
 	}
+}
+
+func printFormats() {
+	fmt.Println(`
+		ANSIC       = "Mon Jan _2 15:04:05 2006"
+		UnixDate    = "Mon Jan _2 15:04:05 MST 2006"
+		RubyDate    = "Mon Jan 02 15:04:05 -0700 2006"
+		RFC822      = "02 Jan 06 15:04 MST"
+		RFC822Z     = "02 Jan 06 15:04 -0700" RFC822 with numeric zone
+		RFC850      = "Monday, 02-Jan-06 15:04:05 MST"
+		RFC1123     = "Mon, 02 Jan 2006 15:04:05 MST"
+		RFC1123Z    = "Mon, 02 Jan 2006 15:04:05 -0700" RFC1123 with numeric zone
+		RFC3339     = "2006-01-02T15:04:05Z07:00"
+		RFC3339Nano = "2006-01-02T15:04:05.999999999Z07:00"
+		Kitchen     = "3:04PM"
+		Stamp      = "Jan _2 15:04:05"
+		StampMilli = "Jan _2 15:04:05.000"
+		StampMicro = "Jan _2 15:04:05.000000"
+		StampNano  = "Jan _2 15:04:05.000000000"
+		TimestampSec	= "time.Unix()"
+		TimestampMilli  = "time.UnixNano()/1000000"
+		TimestampMicro  = "time.UnixNano()/1000"
+		TimestampNano	= "time.UnixNano()"
+		`)
 }
 
 func Main(cmd *cobra.Command, args []string) error {
 	//version
 	if viper.GetBool("version") {
 		fmt.Println(build.String())
+		return nil
+	}
+	//formats
+	if viper.GetBool("Formats") {
+		printFormats()
 		return nil
 	}
 	//pipe stdin
@@ -75,9 +122,9 @@ func Main(cmd *cobra.Command, args []string) error {
 			return errors.Annotate(err, "parse strict")
 		}
 		if t.After(times[0]) {
-			return errors.ValueErr(1)
+			return errors.CodeError(&cmpCode{val: 1})
 		}
-		return nil
+		return errors.CodeError(&cmpCode{})
 	}
 
 	//after compare
@@ -87,29 +134,13 @@ func Main(cmd *cobra.Command, args []string) error {
 			return errors.Annotate(err, "parse strict")
 		}
 		if t.Before(times[0]) {
-			return errors.ValueErr(1)
+			return errors.CodeError(&cmpCode{val: 1})
 		}
-		return nil
+		return errors.CodeError(&cmpCode{})
 	}
 
 	//convert
 	for _, tm := range times {
-		// ANSIC       = "Mon Jan _2 15:04:05 2006"
-		// UnixDate    = "Mon Jan _2 15:04:05 MST 2006"
-		// RubyDate    = "Mon Jan 02 15:04:05 -0700 2006"
-		// RFC822      = "02 Jan 06 15:04 MST"
-		// RFC822Z     = "02 Jan 06 15:04 -0700" // RFC822 with numeric zone
-		// RFC850      = "Monday, 02-Jan-06 15:04:05 MST"
-		// RFC1123     = "Mon, 02 Jan 2006 15:04:05 MST"
-		// RFC1123Z    = "Mon, 02 Jan 2006 15:04:05 -0700" // RFC1123 with numeric zone
-		// RFC3339     = "2006-01-02T15:04:05Z07:00"
-		// RFC3339Nano = "2006-01-02T15:04:05.999999999Z07:00"
-		// Kitchen     = "3:04PM"
-		// // Handy time stamps.
-		// Stamp      = "Jan _2 15:04:05"
-		// StampMilli = "Jan _2 15:04:05.000"
-		// StampMicro = "Jan _2 15:04:05.000000"
-		// StampNano  = "Jan _2 15:04:05.000000000"
 		if len(viper.GetString("format")) > 0 {
 			dest := ""
 			switch viper.GetString("format") {
@@ -143,6 +174,18 @@ func Main(cmd *cobra.Command, args []string) error {
 				dest = time.StampMicro
 			case "StampNano":
 				dest = time.StampNano
+			case "TimestampSec":
+				fmt.Fprintln(os.Stdout, tm.Unix())
+				continue
+			case "TimestampMilli":
+				fmt.Fprintln(os.Stdout, tm.UnixNano()/1000000)
+				continue
+			case "TimestampMicro":
+				fmt.Fprintln(os.Stdout, tm.UnixNano()/1000)
+				continue
+			case "TimestampNano":
+				fmt.Fprintln(os.Stdout, tm.UnixNano())
+				continue
 			default:
 				d, err := dateparse.ParseFormat(viper.GetString("format"))
 				if err != nil {
