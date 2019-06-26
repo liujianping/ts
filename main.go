@@ -16,7 +16,7 @@ package main
 
 import (
 	"github.com/liujianping/ts/cmd"
-	ver "github.com/liujianping/ts/version"
+	"github.com/x-mod/build"
 )
 
 var (
@@ -26,6 +26,6 @@ var (
 )
 
 func main() {
-	ver.Info(version, commit, date)
+	build.Info(version, commit, date)
 	cmd.Execute()
 }

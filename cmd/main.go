@@ -2,7 +2,7 @@ package cmd
 
 import (
 	"fmt"
-	"io"
+	"io/ioutil"
 	"os"
 	"strings"
 	"time"
@@ -10,26 +10,43 @@ import (
 	"github.com/araddon/dateparse"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
+	"github.com/x-mod/build"
 	"github.com/x-mod/errors"
 )
 
-var stdin io.Reader
-var stderr io.Writer
-var stdout io.Writer
-
 func exitForErr(err error) {
 	if err != nil {
-		stderr.Write([]byte(err.Error()))
-		os.Exit(errors.ValueFrom(err))
+		os.Stderr.Write([]byte(err.Error()))
+		os.Exit(int(errors.ValueFrom(err)))
 	}
 }
 
 func Main(cmd *cobra.Command, args []string) error {
+	//version
+	if viper.GetBool("version") {
+		fmt.Println(build.String())
+		return nil
+	}
+	//pipe stdin
+	if len(args) == 0 {
+		info, err := os.Stdin.Stat()
+		if err != nil {
+			return errors.Annotate(err, "stdin stat failed")
+		}
+
+		if info.Mode()&os.ModeNamedPipe != 0 {
+			d, err := ioutil.ReadAll(os.Stdin)
+			if err != nil {
+				return errors.Annotate(err, "stdin read failed")
+			}
+			args = append(args, string(d))
+		}
+	}
 	//timezone
 	if len(viper.GetString("timezone")) > 0 {
 		loc, err := time.LoadLocation(viper.GetString("timezone"))
 		if err != nil {
-			panic(err.Error())
+			return err
 		}
 		time.Local = loc
 	}
@@ -43,7 +60,9 @@ func Main(cmd *cobra.Command, args []string) error {
 	}
 	for _, arg := range args {
 		t, err := dateparse.ParseStrict(strings.TrimSpace(arg))
-		exitForErr(err)
+		if err != nil {
+			return errors.Annotate(err, "parse strict")
+		}
 		t = t.Add(viper.GetDuration("add"))
 		t = t.Add(-viper.GetDuration("sub"))
 		times = append(times, t)
@@ -52,21 +71,25 @@ func Main(cmd *cobra.Command, args []string) error {
 	//before compare
 	if len(viper.GetString("before")) > 0 {
 		t, err := dateparse.ParseStrict(viper.GetString("before"))
-		exitForErr(err)
-		if t.After(times[0]) {
-			os.Exit(1)
+		if err != nil {
+			return errors.Annotate(err, "parse strict")
 		}
-		os.Exit(0)
+		if t.After(times[0]) {
+			return errors.ValueErr(1)
+		}
+		return nil
 	}
 
 	//after compare
 	if len(viper.GetString("after")) > 0 {
 		t, err := dateparse.ParseStrict(viper.GetString("after"))
-		exitForErr(err)
-		if t.Before(times[0]) {
-			os.Exit(1)
+		if err != nil {
+			return errors.Annotate(err, "parse strict")
 		}
-		os.Exit(0)
+		if t.Before(times[0]) {
+			return errors.ValueErr(1)
+		}
+		return nil
 	}
 
 	//convert
@@ -122,19 +145,15 @@ func Main(cmd *cobra.Command, args []string) error {
 				dest = time.StampNano
 			default:
 				d, err := dateparse.ParseFormat(viper.GetString("format"))
-				exitForErr(err)
+				if err != nil {
+					return errors.Annotate(err, "parse format")
+				}
 				dest = d
 			}
-			fmt.Fprintln(stdout, tm.Format(dest))
+			fmt.Fprintln(os.Stdout, tm.Format(dest))
 			continue
 		}
-		fmt.Fprintln(stdout, tm.UnixNano()/1000000)
+		fmt.Fprintln(os.Stdout, tm.UnixNano()/1000000)
 	}
 	return nil
-}
-
-func init() {
-	stdin = os.Stdin
-	stderr = os.Stderr
-	stdout = os.Stdout
 }

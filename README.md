@@ -1,15 +1,31 @@
 ts
 ===
 timestamp convert & compare tool
+[![GoDoc](https://godoc.org/github.com/liujianping/ts?status.svg)](https://godoc.org/github.com/liujianping/ts) [![Go Report Card](https://goreportcard.com/badge/github.com/liujianping/ts)](https://goreportcard.com/report/github.com/liujianping/ts) [![Build Status](https://travis-ci.org/liujianping/ts.svg?branch=master)](https://travis-ci.org/liujianping/ts) [![Version](https://img.shields.io/github/tag/liujianping/ts.svg)](https://github.com/liujianping/ts/releases) [![Coverage Status](https://coveralls.io/repos/github/liujianping/ts/badge.svg?branch=master)](https://coveralls.io/github/liujianping/ts?branch=master)
 
 ## Install
 
+### Shell Install support Linux & MacOS
+
+````bash
+# binary will be $(go env GOPATH)/bin/ts
+$: curl -sfL https://raw.githubusercontent.com/liujianping/ts/master/install.sh | sh -s -- -b $(go env GOPATH)/bin
+
+# In alpine linux (as it does not come with curl by default)
+$: wget -O - -q https://raw.githubusercontent.com/liujianping/ts/master/install.sh | sh -s 
+
+```` 
+
+### Brew Install only MacOS
 ````bash
 $: brew tap liujianping/tap && brew install ts
+````
 
-//OR
-
-$: go get github.com/liujianping/ts
+### Source Install
+````bash
+$: git clone git@github.com:liujianping/ts.git
+$: cd ts
+$: go install -mod vendor
 ````
 
 ## Quick Start
