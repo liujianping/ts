@@ -80,8 +80,10 @@ func Main(cmd *cobra.Command, args []string) error {
 		if err != nil {
 			return errors.Annotate(err, "stdin stat failed")
 		}
-
-		if info.Mode()&os.ModeNamedPipe != 0 {
+		//OR ModeCharDevice & Size check
+		// if (info.Mode()&os.ModeCharDevice) == os.ModeCharDevice &&
+		// 	info.Size() > 0 {
+		if (info.Mode() & os.ModeNamedPipe) == os.ModeNamedPipe {
 			d, err := ioutil.ReadAll(os.Stdin)
 			if err != nil {
 				return errors.Annotate(err, "stdin read failed")
@@ -106,7 +108,7 @@ func Main(cmd *cobra.Command, args []string) error {
 		times = append(times, t)
 	}
 	for _, arg := range args {
-		t, err := dateparse.ParseStrict(strings.TrimSpace(arg))
+		t, err := dateparse.ParseIn(strings.TrimSpace(arg), time.Local)
 		if err != nil {
 			return errors.Annotate(err, "parse strict")
 		}
@@ -117,7 +119,8 @@ func Main(cmd *cobra.Command, args []string) error {
 
 	//before compare
 	if len(viper.GetString("before")) > 0 {
-		t, err := dateparse.ParseStrict(viper.GetString("before"))
+		t, err := dateparse.ParseIn(viper.GetString("before"), time.Local)
+		//t, err := dateparse.ParseStrict(viper.GetString("before"))
 		if err != nil {
 			return errors.Annotate(err, "parse strict")
 		}
@@ -129,7 +132,7 @@ func Main(cmd *cobra.Command, args []string) error {
 
 	//after compare
 	if len(viper.GetString("after")) > 0 {
-		t, err := dateparse.ParseStrict(viper.GetString("after"))
+		t, err := dateparse.ParseIn(viper.GetString("after"), time.Local)
 		if err != nil {
 			return errors.Annotate(err, "parse strict")
 		}
