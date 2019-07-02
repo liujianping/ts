@@ -63,6 +63,7 @@ func printFormats() {
 		`)
 }
 
+//Main impl for Root Command
 func Main(cmd *cobra.Command, args []string) error {
 	//version
 	if viper.GetBool("version") {

@@ -7,6 +7,7 @@ import (
 	"github.com/spf13/viper"
 )
 
+//RootCmd constructor
 func RootCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "ts",
